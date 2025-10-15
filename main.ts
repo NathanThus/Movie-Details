@@ -17,9 +17,17 @@ export default class MovieDetails extends Plugin {
 		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (_evt: MouseEvent) => {
+		const ribbonIconEl = this.addRibbonIcon('clapperboard', 'Grab Movie Details', async (_evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+			let url = "http://www.omdbapi.com/?t=Spirited+Away&apikey="+this.settings.API_Key;
+			const response = await fetch(url);
+			if(!response.ok)
+			{
+				new Notice('API Called!\nRespone: ' + "FAIL" + "\nReason: " + response.status);
+				return;
+			}
+			const result = await response.json();
+			new Notice(result.Genre);
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
