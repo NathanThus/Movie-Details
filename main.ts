@@ -76,3 +76,43 @@ class MovieDetailsTab extends PluginSettingTab {
 				}));
 	}
 }
+
+interface Rating {
+  Source: string;
+  Value: string; // Keeping as string because formats vary (e.g. "8.6/10", "96%")
+}
+
+interface Movie {
+  Title: string;
+  Year: number;
+  Rated: string;
+  Released: Date;
+  Runtime: number; // in minutes
+  Genre: string[];
+  Director: string;
+  Writer: string;
+  Actors: string[];
+  Plot: string;
+  Language: string[];
+  Country: string[];
+  Awards: string;
+  Poster: string;
+  Ratings: Rating[];
+  Metascore: number;
+  imdbRating: number;
+  imdbVotes: number;
+  imdbID: string;
+  Type: 'movie' | 'series' | 'episode' | string; // known OMDb types + fallback
+  DVD?: Date | null;
+  BoxOffice?: number | null;
+  Production?: string | null;
+  Website?: string | null;
+  Response: boolean;
+}
+
+
+function ParsedData(data :Movie): string {
+	
+	return "---\nYear:\nGenre:\nIMDBID:\nRating:\n---\n";
+}
+
