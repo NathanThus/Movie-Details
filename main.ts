@@ -19,10 +19,25 @@ export default class MovieDetails extends Plugin {
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('clapperboard', 'Grab Movie Details', async (_evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			let url = "http://www.omdbapi.com/?t=Spirited+Away&apikey="+this.settings.API_Key;
+			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+			if (markdownView == null) {
+				new Notice("No valid open file!");
+				return;
+			}
+
+			if (markdownView.file == null) {
+				new Notice("No valid open file!");
+				return;
+			}
+
+			let file = markdownView.file;
+			let requestName = file.basename.replace(" ","+");
+
+			let url = "http://www.omdbapi.com/?t=" + requestName + "&apikey=" + this.settings.API_Key;
 			const response = await fetch(url);
-			if(!response.ok)
-			{
+
+			if (!response.ok) {
 				new Notice('API Called!\nRespone: ' + "FAIL" + "\nReason: " + response.status);
 				return;
 			}
