@@ -1,7 +1,5 @@
 import { App, Editor, MarkdownView, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
-
 interface MovieDetailsSettings {
 	API_Key: string;
 }
@@ -16,40 +14,11 @@ export default class MovieDetails extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('clapperboard', 'Grab Movie Details', async (_evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-
-			if (markdownView == null) {
-				new Notice("No valid open file!");
 				return;
 			}
 
-			if (markdownView.file == null) {
-				new Notice("No valid open file!");
-				return;
-			}
 
-			let file = markdownView.file;
-			let requestName = file.basename.replace(" ","+");
-
-			let url = "http://www.omdbapi.com/?t=" + requestName + "&apikey=" + this.settings.API_Key;
-			const response = await fetch(url);
-
-			if (!response.ok) {
-				new Notice('API Called!\nRespone: ' + "FAIL" + "\nReason: " + response.status);
-				return;
-			}
-			const result = await response.json();
-
-			markdownView.editor.setCursor(0,0);
-			markdownView.editor.replaceRange(ParsedData(result),markdownView.editor.getCursor());
 		});
-		// Perform additional things with the ribbon
-		// ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new MovieDetailsTab(this.app, this));
 	}
 
@@ -126,8 +95,4 @@ interface Movie {
 }
 
 
-function ParsedData(data :Movie): string {
-	
-	return "---\nYear:\nGenre:\nIMDBID:\nRating:\n---\n";
-}
 
