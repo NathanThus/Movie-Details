@@ -14,6 +14,36 @@ export default class MovieDetails extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
+		this.addCommand({
+			id: 'get-movie-data',
+			name: 'Get Movie Data',
+			editorCallback: async (editor: Editor, _view: MarkdownView) => {
+				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (markdownView == null) {
+					new Notice("No valid open file!");
+					return;
+				}
+
+				if (markdownView.file == null) {
+					new Notice("No valid open file!");
+					return;
+				}
+
+				let file = markdownView.file;
+				let requestName = file.basename.replace(" ", "+");
+
+				let url = "http://www.omdbapi.com/?t=" + requestName + "&apikey=" + this.settings.API_Key;
+				const response = await fetch(url);
+
+				if (!response.ok) {
+					new Notice('API Called!\nRespone: ' + "FAIL" + "\nReason: " + response.status);
+					return;
+				}
+
+				const result = await response.json();
+				new Notice(ParsedData(result));
+				markdownView.editor.setCursor(0, 0);
+				markdownView.editor.replaceRange(ParsedData(result), markdownView.editor.getCursor());
 				return;
 			}
 
@@ -62,37 +92,52 @@ class MovieDetailsTab extends PluginSettingTab {
 }
 
 interface Rating {
-  Source: string;
-  Value: string; // Keeping as string because formats vary (e.g. "8.6/10", "96%")
+	Source: string;
+	Value: string; // Keeping as string because formats vary (e.g. "8.6/10", "96%")
 }
 
 interface Movie {
-  Title: string;
-  Year: number;
-  Rated: string;
-  Released: Date;
-  Runtime: number; // in minutes
-  Genre: string[];
-  Director: string;
-  Writer: string;
-  Actors: string[];
-  Plot: string;
-  Language: string[];
-  Country: string[];
-  Awards: string;
-  Poster: string;
-  Ratings: Rating[];
-  Metascore: number;
-  imdbRating: number;
-  imdbVotes: number;
-  imdbID: string;
-  Type: 'movie' | 'series' | 'episode' | string; // known OMDb types + fallback
-  DVD?: Date | null;
-  BoxOffice?: number | null;
-  Production?: string | null;
-  Website?: string | null;
-  Response: boolean;
+	Title: string;
+	Year: number;
+	Rated: string;
+	Released: Date;
+	Runtime: number; // in minutes
+	Genre: string;
+	Director: string;
+	Writer: string;
+	Actors: string[];
+	Plot: string;
+	Language: string[];
+	Country: string[];
+	Awards: string;
+	Poster: string;
+	Ratings: Rating[];
+	Metascore: number;
+	imdbRating: number;
+	imdbVotes: number;
+	imdbID: string;
+	Type: 'movie' | 'series' | 'episode' | string; // known OMDb types + fallback
+	DVD?: Date | null;
+	BoxOffice?: number | null;
+	Production?: string | null;
+	Website?: string | null;
+	Response: boolean;
 }
 
 
+function ParsedData(data: Movie): string {
+	let genreText = "\n";
 
+	data.Genre.split(",").forEach(element => {
+		genreText += "  - " + element.trim() + "\n";
+	});
+
+	return "---\n"
+		+ "Year: " + data.Year + "\n"
+		+ "Genre: " + genreText + "\n"
+		+ "Director: " + data.Director + "\n"
+		+ "IMDB ID: " + data.imdbID + "\n"
+		+ "Rating: " + data.imdbRating + "\n"
+		+ "Poster: " + data.Poster + "\n"
+		+ "---";
+}
