@@ -24,7 +24,7 @@ export default class MovieDetails extends Plugin {
 					return;
 				}
 
-				GetMovieDataByTitle(markdownView);
+				GetMovieDataByTitle(markdownView,this.settings.API_Key);
 			}
 		});
 
@@ -37,8 +37,7 @@ export default class MovieDetails extends Plugin {
 					new Notice("No valid open file!");
 					return;
 				}
-
-				GetMovieDataByID(markdownView);
+				GetMovieDataByID(markdownView,this.settings.API_Key);
 			}
 		});
 		
@@ -148,7 +147,7 @@ function InsertData(markdownView: MarkdownView, result: Movie) {
 	markdownView.editor.replaceRange(ParsedData(result), markdownView.editor.getCursor());
 }
 
-async function GetMovieDataByTitle(markdownView: MarkdownView) {
+async function GetMovieDataByTitle(markdownView: MarkdownView, apikey:string) {
 	if (markdownView.file == null) {
 		new Notice("No valid open file!");
 		return;
@@ -156,7 +155,7 @@ async function GetMovieDataByTitle(markdownView: MarkdownView) {
 
 	let requestName = GetFileTitle(markdownView);
 
-	let url = "http://www.omdbapi.com/?t=" + requestName + "&apikey=" + this.settings.API_Key;
+	let url = "http://www.omdbapi.com/?t=" + requestName + "&apikey=" + apikey;
 	const response = await fetch(url);
 	const result = await response.json();
 
@@ -170,23 +169,27 @@ async function GetMovieDataByTitle(markdownView: MarkdownView) {
 	return;
 }
 
-async function GetMovieDataByID(markdownView: MarkdownView) {
+async function GetMovieDataByID(markdownView: MarkdownView, apikey:string) {
 	let requestName = GetFileTitle(markdownView);
-	new Notice("Entered Function!");
-	new Notice(requestName);
 
-	// let url = "http://www.omdbapi.com/?i=" + requestName + "&apikey=" + this.settings.API_Key;
-	let url = "http://www.omdbapi.com/?i=tt0119116&apikey=42fe1763";
+	if(requestName == null) return;
+
+	let url = "http://www.omdbapi.com/?i=" + requestName + "&apikey=" + apikey;
+
 	const response = await fetch(url);
 	const result = await response.json();
-	new Notice("URL Fetched");
 
 	if (!response.ok) {
 		new Notice('API Called!\nRespone: ' + "FAIL" + "\nReason: " + response.status);
 		return;
 	}
 
-	InsertData(markdownView, result)
-	markdownView.editor.setCursor(0,markdownView.editor.lineCount());
-	markdownView.editor.replaceRange(result.Title,markdownView.editor.getCursor());
+	InsertData(markdownView, result);
+	AddMovieTitleToFile(markdownView, result);
+}
+
+function AddMovieTitleToFile(markdownView: MarkdownView, result: any) {
+	new Notice(markdownView.editor.lineCount().toString());
+	markdownView.editor.setCursor(markdownView.editor.lastLine())
+	markdownView.editor.replaceRange("\n" + result.Title, markdownView.editor.getCursor());
 }
