@@ -16,7 +16,7 @@ export default class MovieDetails extends Plugin {
 
 		this.addCommand({
 			id: 'get-movie-data',
-			name: 'Get Movie Data',
+			name: 'Get Movie Data By Title',
 			editorCallback: async (editor: Editor, _view: MarkdownView) => {
 				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (markdownView == null) {
@@ -24,31 +24,24 @@ export default class MovieDetails extends Plugin {
 					return;
 				}
 
-				if (markdownView.file == null) {
+				GetMovieDataByTitle(markdownView);
+			}
+		});
+
+		this.addCommand({
+			id: 'get-movie-data-by-id',
+			name: 'Get Movie Data By ID',
+			editorCallback: async (editor: Editor, _view: MarkdownView) => {
+				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (markdownView == null) {
 					new Notice("No valid open file!");
 					return;
 				}
 
-				let file = markdownView.file;
-				let requestName = file.basename.replace(" ", "+");
-
-				let url = "http://www.omdbapi.com/?t=" + requestName + "&apikey=" + this.settings.API_Key;
-				const response = await fetch(url);
-
-				if (!response.ok) {
-					new Notice('API Called!\nRespone: ' + "FAIL" + "\nReason: " + response.status);
-					return;
-				}
-
-				const result = await response.json();
-				new Notice(ParsedData(result));
-				markdownView.editor.setCursor(0, 0);
-				markdownView.editor.replaceRange(ParsedData(result), markdownView.editor.getCursor());
-				return;
+				GetMovieDataByID(markdownView);
 			}
-
-
 		});
+		
 		this.addSettingTab(new MovieDetailsTab(this.app, this));
 	}
 
@@ -140,4 +133,60 @@ function ParsedData(data: Movie): string {
 		+ "Rating: " + data.imdbRating + "\n"
 		+ "Poster: " + data.Poster + "\n"
 		+ "---";
+}
+
+function GetFileTitle(markdownView: MarkdownView) {
+	let file = markdownView.file;
+	if (file == null) return;
+	return file.basename.replace(" ", "+");
+
+}
+
+function InsertData(markdownView: MarkdownView, result: Movie) {
+	new Notice(ParsedData(result));
+	markdownView.editor.setCursor(0, 0);
+	markdownView.editor.replaceRange(ParsedData(result), markdownView.editor.getCursor());
+}
+
+async function GetMovieDataByTitle(markdownView: MarkdownView) {
+	if (markdownView.file == null) {
+		new Notice("No valid open file!");
+		return;
+	}
+
+	let requestName = GetFileTitle(markdownView);
+
+	let url = "http://www.omdbapi.com/?t=" + requestName + "&apikey=" + this.settings.API_Key;
+	const response = await fetch(url);
+	const result = await response.json();
+
+	if (!response.ok) {
+		new Notice('API Called!\nRespone: ' + "FAIL" + "\nReason: " + response.status);
+		return;
+	}
+
+	InsertData(markdownView, result)
+
+	return;
+}
+
+async function GetMovieDataByID(markdownView: MarkdownView) {
+	let requestName = GetFileTitle(markdownView);
+	new Notice("Entered Function!");
+	new Notice(requestName);
+
+	// let url = "http://www.omdbapi.com/?i=" + requestName + "&apikey=" + this.settings.API_Key;
+	let url = "http://www.omdbapi.com/?i=tt0119116&apikey=42fe1763";
+	const response = await fetch(url);
+	const result = await response.json();
+	new Notice("URL Fetched");
+
+	if (!response.ok) {
+		new Notice('API Called!\nRespone: ' + "FAIL" + "\nReason: " + response.status);
+		return;
+	}
+
+	InsertData(markdownView, result)
+	markdownView.editor.setCursor(0,markdownView.editor.lineCount());
+	markdownView.editor.replaceRange(result.Title,markdownView.editor.getCursor());
 }
