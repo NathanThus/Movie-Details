@@ -164,6 +164,13 @@ async function GetMovieDataByTitle(markdownView: MarkdownView, apikey:string) {
 		return;
 	}
 
+	if (result.Response === "False") {
+		new Notice(
+			'API Called!\nResponse: FAIL\nReason: ' + (result.Error ?? "Unknown OMDB error")
+		);
+		return;
+	}
+
 	InsertData(markdownView, result)
 
 	return;
@@ -181,6 +188,13 @@ async function GetMovieDataByID(markdownView: MarkdownView, apikey:string) {
 
 	if (!response.ok) {
 		new Notice('API Called!\nRespone: ' + "FAIL" + "\nReason: " + response.status);
+		return;
+	}
+
+	if (result.Response === "False") {
+		new Notice(
+			'API Called!\nResponse: FAIL\nReason: ' + (result.Error ?? "Unknown OMDB error")
+		);
 		return;
 	}
 
