@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownFileInfo, MarkdownView, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 interface MovieDetailsSettings {
 	API_Key: string;
@@ -9,7 +9,7 @@ const DEFAULT_SETTINGS: MovieDetailsSettings = {
 }
 
 export default class MovieDetails extends Plugin {
-	settings: MovieDetailsSettings;
+	settings!: MovieDetailsSettings;
 
 	async onload() {
 		try {
@@ -23,7 +23,11 @@ export default class MovieDetails extends Plugin {
 		this.addCommand({
 			id: 'get-movie-data',
 			name: 'Get Movie Data By Title',
-			editorCallback: async (editor: Editor, _view: MarkdownView) => {
+
+			editorCallback: async (
+				editor: Editor,
+				_ctx: MarkdownView | MarkdownFileInfo
+			) => {
 				try {
 					const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 					if (markdownView == null) {
@@ -47,7 +51,10 @@ export default class MovieDetails extends Plugin {
 		this.addCommand({
 			id: 'get-movie-data-by-id',
 			name: 'Get Movie Data By ID',
-			editorCallback: async (editor: Editor, _view: MarkdownView) => {
+			editorCallback: async (
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo
+			) => {
 				try {
 					const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 					if (markdownView == null) {
@@ -67,7 +74,7 @@ export default class MovieDetails extends Plugin {
 				}
 			}
 		});
-		
+
 		this.addSettingTab(new MovieDetailsTab(this.app, this));
 	}
 
@@ -219,10 +226,10 @@ async function GetMovieDataByTitle(markdownView: MarkdownView, apikey: string): 
 	}
 
 	const url = "http://www.omdbapi.com/?t=" + requestName + "&apikey=" + apikey;
-	
+
 	try {
 		const response = await fetch(url);
-		
+
 		if (!response.ok) {
 			new Notice(`API request failed: HTTP ${response.status}`);
 			console.error(`GetMovieDataByTitle: HTTP error ${response.status}`);
@@ -268,7 +275,7 @@ async function GetMovieDataByID(markdownView: MarkdownView, apikey: string): Pro
 
 	try {
 		const response = await fetch(url);
-		
+
 		if (!response.ok) {
 			new Notice(`API request failed: HTTP ${response.status}`);
 			console.error(`GetMovieDataByID: HTTP error ${response.status}`);
@@ -296,7 +303,7 @@ async function GetMovieDataByID(markdownView: MarkdownView, apikey: string): Pro
 		}
 
 		InsertData(markdownView, result);
-		
+
 		try {
 			AddMovieTitleToFile(markdownView, result);
 		} catch (error) {
